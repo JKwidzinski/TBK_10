@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  accesslog:
+    image: diamol/ch04-access-log
+    networks:
+      - tbk-10-2
+
+  iotd:
+    image: diamol/ch04-image-of-the-day
+    ports:
+      - 8088:80
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/image"]
+      interval: 5s
+      timeout: 20s
+      start_period: 10s
+      retries: 2
+
+    deploy:
+      replicas: 4
+      update_config:
+        parallelism: 2
+        order: start-first
+        monitor: 90s
+        failure_action: rollback
+      rollback_config:
+        parallelism: 4
+        order: start-first
+        failure_action: continue
+    networks:
+      - tbk-10-2
+
+  image-gallery:
+    image: diamol/ch04-image-gallery
+    ports:
+      - 80:80
+    networks:
+      - tbk-10-2
+
+networks:
+  tbk-10-2:
+    name: tbk-10-2
